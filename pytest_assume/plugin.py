@@ -11,6 +11,7 @@ except ImportError:
 
 _FAILED_ASSUMPTIONS = []
 _ASSUMPTION_LOCALS = []
+global_plugin_mgr = None
 
 
 class FailedAssumption(Exception):
@@ -28,6 +29,7 @@ def assume(expr, msg=''):
     :return: None
     """
     if not expr:
+        global_plugin_mgr.hook.pytest_assume_fail()
         (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
         # get filename, line, and context
         filename = os.path.relpath(filename)
@@ -44,7 +46,17 @@ def assume(expr, msg=''):
             pretty_locals = ["\t%-10s = %s" % (name, saferepr(val))
                              for name, val in frame.f_locals.items()]
             _ASSUMPTION_LOCALS.append(pretty_locals)
+    else:
+        global_plugin_mgr.hook.pytest_assume_pass()
 
+def pytest_addhooks(pluginmanager):
+    """ This example assumes the hooks are grouped in the 'hooks' module. """
+    from . import hooks
+
+    global global_plugin_mgr
+
+    pluginmanager.add_hookspecs(hooks)
+    global_plugin_mgr = pluginmanager
 
 def pytest_configure(config):
     """
@@ -56,7 +68,14 @@ def pytest_configure(config):
     pytest.assume = assume
     pytest._showlocals = config.getoption("showlocals")
 
-
+@pytest.hookimpl(tryfirst=True)
+def pytest_assume_fail():
+    pass
+	
+@pytest.hookimpl(tryfirst=True)
+def pytest_assume_pass():
+    pass
+	
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem):
     """
