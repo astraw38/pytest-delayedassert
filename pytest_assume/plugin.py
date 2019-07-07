@@ -46,8 +46,11 @@ def assume(expr, msg=''):
             pretty_locals = ["\t%-10s = %s" % (name, saferepr(val))
                              for name, val in frame.f_locals.items()]
             _ASSUMPTION_LOCALS.append(pretty_locals)
+            
+        return False
     else:
         global_plugin_mgr.hook.pytest_assume_pass()
+        return True
 
 def pytest_addhooks(pluginmanager):
     """ This example assumes the hooks are grouped in the 'hooks' module. """
