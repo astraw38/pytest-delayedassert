@@ -27,12 +27,12 @@ def assume(expr, msg=''):
     :param msg: Message to display if the assertion fails.
     :return: None
     """
+    (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
+    # get filename, line, and context
+    filename = os.path.relpath(filename)
+    context = contextlist[0].lstrip() if not msg else msg
+
     if not expr:
-        pytest.config.pluginmanager.hook.pytest_assume_fail()
-        (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
-        # get filename, line, and context
-        filename = os.path.relpath(filename)
-        context = contextlist[0].lstrip() if not msg else msg
         # format entry
         entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
         # add entry
@@ -46,9 +46,13 @@ def assume(expr, msg=''):
                              for name, val in frame.f_locals.items()]
             _ASSUMPTION_LOCALS.append(pretty_locals)
             
+        pytest.config.pluginmanager.hook.pytest_assume_fail(lineno=line, entry=entry)
         return False
     else:
-        pytest.config.pluginmanager.hook.pytest_assume_pass()
+        # format entry
+        entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+
+        pytest.config.pluginmanager.hook.pytest_assume_pass(lineno=line, entry=entry)
         return True
 
 def pytest_addhooks(pluginmanager):
@@ -68,11 +72,11 @@ def pytest_configure(config):
     pytest._showlocals = config.getoption("showlocals")
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_assume_fail():
+def pytest_assume_fail(lineno, entry):
     pass
 	
 @pytest.hookimpl(tryfirst=True)
-def pytest_assume_pass():
+def pytest_assume_pass(lineno, entry):
     pass
 	
 @pytest.hookimpl(hookwrapper=True)
