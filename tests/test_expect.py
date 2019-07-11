@@ -25,6 +25,7 @@ def test_failing_expect(testdir):
     result.assert_outcomes(0, 0, 1)
     assert '1 failed' in result.stdout.str()
     assert '1 Failed Assumptions' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_multi_pass_one_failing_expect(testdir):
@@ -41,6 +42,7 @@ def test_multi_pass_one_failing_expect(testdir):
     result.assert_outcomes(0, 0, 1)
     assert '1 failed' in result.stdout.str()
     assert '2 Failed Assumptions' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_passing_expect_doesnt_cloak_assert(testdir):
@@ -55,6 +57,7 @@ def test_passing_expect_doesnt_cloak_assert(testdir):
     result.assert_outcomes(0, 0, 1)
     assert '1 failed' in result.stdout.str()
     assert 'AssertionError' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_failing_expect_doesnt_cloak_assert(testdir):
@@ -70,6 +73,7 @@ def test_failing_expect_doesnt_cloak_assert(testdir):
     assert '1 failed' in result.stdout.str()
     assert 'AssertionError' in result.stdout.str()
     assert '1 Failed Assumptions' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 def test_failing_expect_doesnt_cloak_assert_withrepr(testdir):
     testdir.makepyfile(
@@ -86,6 +90,7 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir):
     assert '1 failed' in result.stdout.str()
     assert 'AssertionError' in result.stdout.str()
     assert '1 Failed Assumptions:' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_msg_is_in_output(testdir):
@@ -102,6 +107,7 @@ def test_msg_is_in_output(testdir):
     assert '1 failed' in result.stdout.str()
     assert '1 Failed Assumptions' in result.stdout.str()
     assert 'a:1 b:2' in result.stdout.str()
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_with_locals(testdir):
@@ -120,6 +126,7 @@ def test_with_locals(testdir):
     assert '1 Failed Assumptions' in stdout
     assert "a          = 1" in stdout
     assert "b          = 2" in stdout
+    assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
 def test_without_locals(testdir):
