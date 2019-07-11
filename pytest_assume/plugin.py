@@ -46,13 +46,13 @@ def assume(expr, msg=''):
                              for name, val in frame.f_locals.items()]
             _ASSUMPTION_LOCALS.append(pretty_locals)
             
-        pytest.config.pluginmanager.hook.pytest_assume_fail(lineno=line, entry=entry)
+        pytest._hook_assume_fail(lineno=line, entry=entry)
         return False
     else:
         # format entry
         entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
 
-        pytest.config.pluginmanager.hook.pytest_assume_pass(lineno=line, entry=entry)
+        pytest._hook_assume_pass(lineno=line, entry=entry)
         return True
 
 def pytest_addhooks(pluginmanager):
@@ -70,6 +70,12 @@ def pytest_configure(config):
     """
     pytest.assume = assume
     pytest._showlocals = config.getoption("showlocals")
+
+    #As per pytest documentation: https://docs.pytest.org/en/latest/deprecations.html
+    #The pytest.config global object is deprecated. Instead use request.config (via the request fixture) 
+    #or if you are a plugin author use the pytest_configure(config) hook. 
+    pytest._hook_assume_fail = config.pluginmanager.hook.pytest_assume_fail
+    pytest._hook_assume_pass = config.pluginmanager.hook.pytest_assume_pass
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_assume_fail(lineno, entry):
