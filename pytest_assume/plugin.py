@@ -11,7 +11,6 @@ except ImportError:
 
 _FAILED_ASSUMPTIONS = []
 _ASSUMPTION_LOCALS = []
-global_plugin_mgr = None
 
 
 class FailedAssumption(Exception):
@@ -29,7 +28,7 @@ def assume(expr, msg=''):
     :return: None
     """
     if not expr:
-        global_plugin_mgr.hook.pytest_assume_fail()
+        pytest.config.pluginmanager.hook.pytest_assume_fail()
         (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
         # get filename, line, and context
         filename = os.path.relpath(filename)
@@ -49,17 +48,14 @@ def assume(expr, msg=''):
             
         return False
     else:
-        global_plugin_mgr.hook.pytest_assume_pass()
+        pytest.config.pluginmanager.hook.pytest_assume_pass()
         return True
 
 def pytest_addhooks(pluginmanager):
     """ This example assumes the hooks are grouped in the 'hooks' module. """
+
     from . import hooks
-
-    global global_plugin_mgr
-
     pluginmanager.add_hookspecs(hooks)
-    global_plugin_mgr = pluginmanager
 
 def pytest_configure(config):
     """
