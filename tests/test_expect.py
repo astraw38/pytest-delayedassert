@@ -229,6 +229,83 @@ def test_with_tb(testdir):
     assert tb in result.stdout.str()
 
 
+def test_assume_pass_hook(testdir):
+    """
+    Make sure that pytest_assume_pass works.
+    Also assure proper return value from pytest.assume().
+    """
+
+    # create a temporary conftest.py file
+    testdir.makeconftest(
+        """
+        import pytest
+
+        def pytest_assume_pass(lineno, entry):
+            print ("Inside assume_pass hook")
+            print ("lineno = %s, entry = %s" % (lineno, entry))
+    """
+    )
+
+    # create a temporary pytest test file
+    testdir.makepyfile(
+        """
+        import pytest
+
+        def failing_call():
+            assert False
+
+        def test_pass():
+            ret = pytest.assume(1==1)
+            print ("Retval for pass assume = %s" % ret)
+            failing_call()
+    """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+
+    #assert_outcomes = (passed, skipped, failed)
+    result.assert_outcomes(0, 0, 1)
+
+    assert "Inside assume_pass hook" in result.stdout.str()
+    assert "lineno = 7, entry = test_assume_pass_hook.py:7: AssumptionSuccess" in result.stdout.str()
+    assert "Retval for pass assume = True" in result.stdout.str()
+
+def test_assume_fail_hook(testdir):
+    """
+    Make sure that pytest_assume_fail works.
+    Also assure proper return value from pytest.assume().
+    """
+
+    # create a temporary conftest.py file
+    testdir.makeconftest(
+        """
+        import pytest
+
+        def pytest_assume_fail(lineno, entry):
+            print ("Inside assume_fail hook")
+            print ("lineno = %s, entry = %s" % (lineno, entry))
+    """
+    )
+
+    # create a temporary pytest test file
+    testdir.makepyfile(
+        """
+        import pytest
+
+        def test_fail():
+            ret = pytest.assume(1==2)
+            print ("Retval for fail assume = %s" % ret)
+    """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 1)
+    assert "Inside assume_fail hook" in result.stdout.str()
+    assert "lineno = 6, entry = test_assume_fail_hook.py:4: AssumptionFailure" in result.stdout.str()
+    assert "Retval for fail assume = False" in result.stdout.str()
+
 #
 # def test_flaky(testdir):
 #     testdir.makepyfile(
