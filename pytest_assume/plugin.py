@@ -36,7 +36,7 @@ class FailedAssumption(Exception):
     pass
 
 
-def assume(expr, msg=''):
+def assume(expr, msg=""):
     """
     Checks the expression, if it's false, add it to the
     list of failed assumptions. Also, add the locals at each failed
@@ -63,8 +63,9 @@ def assume(expr, msg=''):
         # every failed assertion, or just the final one.
         # I'm defaulting to per-assumption, just because vars
         # can easily change between assumptions.
-        pretty_locals = ["\t%-10s = %s" % (name, saferepr(val))
-                         for name, val in frame.f_locals.items()]
+        pretty_locals = [
+            "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
+        ]
 
         try:
             raise FailedAssumption(entry)
@@ -81,11 +82,14 @@ def assume(expr, msg=''):
         pytest._hook_assume_pass(lineno=line, entry=entry)
         return True
 
+
 def pytest_addhooks(pluginmanager):
     """ This example assumes the hooks are grouped in the 'hooks' module. """
 
     from . import hooks
+
     pluginmanager.add_hookspecs(hooks)
+
 
 def pytest_configure(config):
     """
@@ -97,19 +101,22 @@ def pytest_configure(config):
     pytest.assume = assume
     pytest._showlocals = config.getoption("showlocals")
 
-    #As per pytest documentation: https://docs.pytest.org/en/latest/deprecations.html
-    #The pytest.config global object is deprecated. Instead use request.config (via the request fixture)
-    #or if you are a plugin author use the pytest_configure(config) hook.
+    # As per pytest documentation: https://docs.pytest.org/en/latest/deprecations.html
+    # The pytest.config global object is deprecated. Instead use request.config (via the request fixture)
+    # or if you are a plugin author use the pytest_configure(config) hook.
     pytest._hook_assume_fail = config.pluginmanager.hook.pytest_assume_fail
     pytest._hook_assume_pass = config.pluginmanager.hook.pytest_assume_pass
+
 
 @pytest.hookimpl(tryfirst=True)
 def pytest_assume_fail(lineno, entry):
     pass
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_assume_pass(lineno, entry):
     pass
+
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem):
@@ -140,7 +147,11 @@ def pytest_pyfunc_call(pyfuncitem):
             del _FAILED_ASSUMPTIONS[:]
             if outcome and outcome.excinfo:
                 root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
-                raise_(FailedAssumption, FailedAssumption(root_msg + "\n" + content), outcome.excinfo[2])
+                raise_(
+                    FailedAssumption,
+                    FailedAssumption(root_msg + "\n" + content),
+                    outcome.excinfo[2],
+                )
             else:
                 exc = FailedAssumption(root_msg + "\n" + content)
                 # Note: raising here so that we guarantee a failure.
