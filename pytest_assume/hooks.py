@@ -5,6 +5,8 @@ def pytest_assume_fail(lineno, entry):
     entry: The assumption failure message generated from assume() call
     """
     pass
+
+
 def pytest_assume_pass(lineno, entry):
     """
     Hook to manipulate user-defined data in-case of assumption success.
@@ -12,4 +14,3 @@ def pytest_assume_pass(lineno, entry):
     entry: The assumption success message generated from assume() call
     """
     pass
-

@@ -6,7 +6,7 @@ from setuptools import setup
 setup(
     name='pytest-assume',
     packages=['pytest_assume'],
-    version='2.0.0',
+    version='2.1.0',
     description='A pytest plugin that allows multiple failures per test',
     author='Brian Okken/Ashley Straw',
     author_email='as.fireflash38@gmail.com',
