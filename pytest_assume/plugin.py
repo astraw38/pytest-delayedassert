@@ -27,11 +27,12 @@ def assume(expr, msg=''):
     :param msg: Message to display if the assertion fails.
     :return: None
     """
+    (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
+    # get filename, line, and context
+    filename = os.path.relpath(filename)
+    context = contextlist[0].lstrip() if not msg else msg
+
     if not expr:
-        (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
-        # get filename, line, and context
-        filename = os.path.relpath(filename)
-        context = contextlist[0].lstrip() if not msg else msg
         # format entry
         entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
         # add entry
@@ -44,11 +45,21 @@ def assume(expr, msg=''):
             pretty_locals = ["\t%-10s = %s" % (name, saferepr(val))
                              for name, val in frame.f_locals.items()]
             _ASSUMPTION_LOCALS.append(pretty_locals)
-
+            
+        pytest._hook_assume_fail(lineno=line, entry=entry)
         return False
     else:
+        # format entry
+        entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+
+        pytest._hook_assume_pass(lineno=line, entry=entry)
         return True
 
+def pytest_addhooks(pluginmanager):
+    """ This example assumes the hooks are grouped in the 'hooks' module. """
+
+    from . import hooks
+    pluginmanager.add_hookspecs(hooks)
 
 def pytest_configure(config):
     """
@@ -60,7 +71,20 @@ def pytest_configure(config):
     pytest.assume = assume
     pytest._showlocals = config.getoption("showlocals")
 
+    #As per pytest documentation: https://docs.pytest.org/en/latest/deprecations.html
+    #The pytest.config global object is deprecated. Instead use request.config (via the request fixture) 
+    #or if you are a plugin author use the pytest_configure(config) hook. 
+    pytest._hook_assume_fail = config.pluginmanager.hook.pytest_assume_fail
+    pytest._hook_assume_pass = config.pluginmanager.hook.pytest_assume_pass
 
+@pytest.hookimpl(tryfirst=True)
+def pytest_assume_fail(lineno, entry):
+    pass
+	
+@pytest.hookimpl(tryfirst=True)
+def pytest_assume_pass(lineno, entry):
+    pass
+	
 @pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem):
     """
