@@ -37,16 +37,19 @@ class FailedAssumption(Exception):
 
 
 class AssumeContextManager(object):
+    def __init__(self):
+        self._enter_from_call = False
+
     def __enter__(self):
         self._last_status = None
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        __tracebackhide__ = True
         pretty_locals = None
         entry = None
         tb = None
-        (frame, filename, line, funcname, contextlist) = inspect.stack()[2][0:5]
+        stack_level = 2 if self._enter_from_call else 1
+        (frame, filename, line, funcname, contextlist) = inspect.stack()[stack_level][0:5]
         # get filename, line, and context
         filename = os.path.relpath(filename)
 
@@ -80,12 +83,13 @@ class AssumeContextManager(object):
         return True
 
     def __call__(self, expr, msg=""):
+        self._enter_from_call = True
         with self:
             if msg:
                 assert expr, msg
             else:
                 assert expr
-
+        self._enter_from_call = False
         return self._last_status
 
 
