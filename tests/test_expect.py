@@ -242,12 +242,17 @@ def test_xpass_assumption(testdir, assume_call):
 
 def test_bytecode(testdir, assume_call):
     testdir.makepyfile(
-        b"""
+        """
         import pytest
 
         def test_func():
-            pytest.assume(b"\x01" == b"\x5b")
-        """
+            {}
+        """.format(
+            assume_call.format(
+                expr='b"\x01" == b"\x5b"',
+                msg=None,
+            )
+        ).encode()
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -260,8 +265,13 @@ def test_unicode(testdir, assume_call):
         import pytest
 
         def test_func():
-            pytest.assume(u"\x5b" == u"\x5a")
-        """
+            {}
+        """.format(
+            assume_call.format(
+                expr='u"\x5b" == u"\x5a"',
+                msg=None,
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -274,8 +284,13 @@ def test_mixed_stringtypes(testdir, assume_call):
         import pytest
 
         def test_func():
-            pytest.assume(b"\x5b" == u"\x5a")
-        """
+            {}
+        """.format(
+            assume_call.format(
+                expr='b"\x5b" == u"\x5a"',
+                msg=None,
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
