@@ -1,5 +1,4 @@
 import inspect
-import sys
 import os.path
 from six import reraise as raise_
 
@@ -37,6 +36,28 @@ class FailedAssumption(AssertionError):
 
 
 class AssumeContextManager(object):
+    """Context manager whose objects can be used for *soft-assertions*
+
+    This context manager can be accessed directly through `pytest.assume`.
+
+    Checks the expression, if it's false, add it to the
+    list of failed assumptions. Also, add the locals at each failed
+    assumption, if showlocals is set.
+
+    When used as a context manager::
+
+        with pytest.assume:
+            assert expr, msg
+
+    When used directly, it also provides a return value::
+
+        ret = pytest.assume(expr, msg)
+
+    :param expr: Expression to 'assert' on.
+    :param msg: Message to display if the assertion fails.
+    :return: True or False, acording to `expr`
+    """
+
     def __init__(self):
         self._enter_from_call = False
 
