@@ -48,7 +48,11 @@ class AssumeContextManager(object):
         tb = None
         (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
         # get filename, line, and context
-        filename = os.path.relpath(filename)
+        try:
+            filename = os.path.relpath(filename)
+        except ValueError:
+            pass  # e.g. different drive
+
         context = contextlist[0].lstrip()
         if exc_val:
             context += str(exc_val) + "\n"
