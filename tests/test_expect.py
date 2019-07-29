@@ -1,13 +1,20 @@
+import pytest
+
+
 pytest_plugins = ("pytester",)
 
 
-def test_passing_expect(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_passing_expect(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
 
         def test_func():
-            pytest.assume(1 == 1)
+            {assume.format(
+                expr="1==1",
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -15,12 +22,16 @@ def test_passing_expect(testdir):
     assert "1 passed" in result.stdout.str()
 
 
-def test_failing_expect(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_failing_expect(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
-            pytest.assume(1 == 2)
+            {assume.format(
+                expr="1==2",
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -30,15 +41,28 @@ def test_failing_expect(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_multi_pass_one_failing_expect(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_multi_pass_one_failing_expect(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
-            pytest.assume("xyz" in "abcdefghijklmnopqrstuvwxyz")
-            pytest.assume(2 == 2)
-            pytest.assume(1 == 2)
-            pytest.assume("xyz" in "abcd")
+            {assume.format(
+                expr='"xyz" in "abcdefghijklmnopqrstuvwxyz"',
+                msg=None
+            )}
+            {assume.format(
+                expr="2==2",
+                msg=None,
+            )}
+            {assume.format(
+                expr="1==2",
+                msg=None,
+            )}
+            {assume.format(
+                expr='"xyz" in "abcd"',
+                msg=None,
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -48,12 +72,16 @@ def test_multi_pass_one_failing_expect(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_passing_expect_doesnt_cloak_assert(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_passing_expect_doesnt_cloak_assert(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
-            pytest.assume(1 == 1)
+            {assume.format(
+                expr='1==1',
+                msg=None
+            )}
             assert 1 == 2
         """
     )
@@ -64,12 +92,16 @@ def test_passing_expect_doesnt_cloak_assert(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_failing_expect_doesnt_cloak_assert(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_failing_expect_doesnt_cloak_assert(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
-            pytest.assume(1 == 2)
+            {assume.format(
+                expr='1==2',
+                msg=None
+            )}
             assert 1 == 2
         """
     )
@@ -81,14 +113,18 @@ def test_failing_expect_doesnt_cloak_assert(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_failing_expect_doesnt_cloak_assert_withrepr(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            pytest.assume(1 == 2)
+            {assume.format(
+                expr='a==b',
+                msg=None
+            )}
             assert a == b
         """
     )
@@ -100,14 +136,18 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_msg_is_in_output(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_msg_is_in_output(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            pytest.assume(a == b, 'a:%s b:%s' % (a,b))
+            {assume.format(
+                expr='a==b',
+                msg='"a:%s b:%s" % (a,b)'
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -118,14 +158,18 @@ def test_msg_is_in_output(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_with_locals(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_with_locals(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            pytest.assume(a == b)
+            {assume.format(
+                expr='a==b',
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess("--showlocals")
@@ -138,14 +182,18 @@ def test_with_locals(testdir):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_without_locals(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_without_locals(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            pytest.assume(a == b)
+            {assume.format(
+                expr='a==b',
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -157,13 +205,17 @@ def test_without_locals(testdir):
     assert "b          = 2" not in stdout
 
 
-def test_xfail_assumption(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_xfail_assumption(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            pytest.assume(1 == 2)
+            {assume.format(
+                expr='1==2',
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess("-rxs")
@@ -173,13 +225,17 @@ def test_xfail_assumption(testdir):
     assert "testfail" in stdout
 
 
-def test_xpass_assumption(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_xpass_assumption(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            pytest.assume(True)
+            {assume.format(
+                expr=True,
+                msg=None
+            )}
         """
     )
     result = testdir.runpytest_inprocess()
@@ -187,7 +243,8 @@ def test_xpass_assumption(testdir):
     assert outcomes.get("xpassed", 0) == 1
 
 
-def test_bytecode(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_bytecode(testdir, assume):
     testdir.makepyfile(
         b"""
         import pytest
@@ -201,7 +258,8 @@ def test_bytecode(testdir):
     assert "1 failed" in result.stdout.str()
 
 
-def test_unicode(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_unicode(testdir, assume):
     testdir.makepyfile(
         """
         import pytest
@@ -215,7 +273,8 @@ def test_unicode(testdir):
     assert "1 failed" in result.stdout.str()
 
 
-def test_mixed_stringtypes(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_mixed_stringtypes(testdir, assume):
     testdir.makepyfile(
         """
         import pytest
@@ -229,16 +288,20 @@ def test_mixed_stringtypes(testdir):
     assert "1 failed" in result.stdout.str()
 
 
-def test_with_tb(testdir):
+@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+def test_with_tb(testdir, assume):
     testdir.makepyfile(
-        """
+        f"""
         import pytest
         
         def failing_func():
             assert False
 
         def test_func():
-            pytest.assume(1 == 2)
+            {assume.format(
+                expr="1==2",
+                msg=None
+            )}
             failing_func()
         """
     )
