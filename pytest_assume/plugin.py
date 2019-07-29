@@ -46,12 +46,9 @@ class AssumeContextManager(object):
         pretty_locals = None
         entry = None
         tb = None
-        (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
+        (frame, filename, line, funcname, contextlist) = inspect.stack()[2][0:5]
         # get filename, line, and context
-        try:
-            filename = os.path.relpath(filename)
-        except ValueError:
-            pass  # e.g. different drive
+        filename = os.path.relpath(filename)
 
         context = contextlist[0].lstrip()
         if exc_val:
