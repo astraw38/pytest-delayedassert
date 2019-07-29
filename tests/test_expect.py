@@ -8,17 +8,17 @@ pytest_plugins = ("pytester",)
     "pytest.assume({expr}, {msg})",
     "with pytest.assume: assert {expr}, {msg}"
 ])
-def assume(request):
+def assume_call(request):
     return request.param
 
 
-def test_passing_expect(testdir, assume):
+def test_passing_expect(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
 
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr="1==1",
                 msg=None
             )}
@@ -29,12 +29,12 @@ def test_passing_expect(testdir, assume):
     assert "1 passed" in result.stdout.str()
 
 
-def test_failing_expect(testdir, assume):
+def test_failing_expect(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr="1==2",
                 msg=None
             )}
@@ -47,24 +47,24 @@ def test_failing_expect(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_multi_pass_one_failing_expect(testdir, assume):
+def test_multi_pass_one_failing_expect(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr='"xyz" in "abcdefghijklmnopqrstuvwxyz"',
                 msg=None
             )}
-            {assume.format(
+            {assume_call.format(
                 expr="2==2",
                 msg=None,
             )}
-            {assume.format(
+            {assume_call.format(
                 expr="1==2",
                 msg=None,
             )}
-            {assume.format(
+            {assume_call.format(
                 expr='"xyz" in "abcd"',
                 msg=None,
             )}
@@ -77,12 +77,12 @@ def test_multi_pass_one_failing_expect(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_passing_expect_doesnt_cloak_assert(testdir, assume):
+def test_passing_expect_doesnt_cloak_assert(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr='1==1',
                 msg=None
             )}
@@ -96,12 +96,12 @@ def test_passing_expect_doesnt_cloak_assert(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_failing_expect_doesnt_cloak_assert(testdir, assume):
+def test_failing_expect_doesnt_cloak_assert(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr='1==2',
                 msg=None
             )}
@@ -116,14 +116,14 @@ def test_failing_expect_doesnt_cloak_assert(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume):
+def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume.format(
+            {assume_call.format(
                 expr='a==b',
                 msg=None
             )}
@@ -138,14 +138,14 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_msg_is_in_output(testdir, assume):
+def test_msg_is_in_output(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume.format(
+            {assume_call.format(
                 expr='a==b',
                 msg='"a:%s b:%s" % (a,b)'
             )}
@@ -159,14 +159,14 @@ def test_msg_is_in_output(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_with_locals(testdir, assume):
+def test_with_locals(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume.format(
+            {assume_call.format(
                 expr='a==b',
                 msg=None
             )}
@@ -182,14 +182,14 @@ def test_with_locals(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-def test_without_locals(testdir, assume):
+def test_without_locals(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume.format(
+            {assume_call.format(
                 expr='a==b',
                 msg=None
             )}
@@ -204,13 +204,13 @@ def test_without_locals(testdir, assume):
     assert "b          = 2" not in stdout
 
 
-def test_xfail_assumption(testdir, assume):
+def test_xfail_assumption(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr='1==2',
                 msg=None
             )}
@@ -223,13 +223,13 @@ def test_xfail_assumption(testdir, assume):
     assert "testfail" in stdout
 
 
-def test_xpass_assumption(testdir, assume):
+def test_xpass_assumption(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr=True,
                 msg=None
             )}
@@ -240,7 +240,7 @@ def test_xpass_assumption(testdir, assume):
     assert outcomes.get("xpassed", 0) == 1
 
 
-def test_bytecode(testdir, assume):
+def test_bytecode(testdir, assume_call):
     testdir.makepyfile(
         b"""
         import pytest
@@ -254,7 +254,7 @@ def test_bytecode(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-def test_unicode(testdir, assume):
+def test_unicode(testdir, assume_call):
     testdir.makepyfile(
         """
         import pytest
@@ -268,7 +268,7 @@ def test_unicode(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-def test_mixed_stringtypes(testdir, assume):
+def test_mixed_stringtypes(testdir, assume_call):
     testdir.makepyfile(
         """
         import pytest
@@ -282,7 +282,7 @@ def test_mixed_stringtypes(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-def test_with_tb(testdir, assume):
+def test_with_tb(testdir, assume_call):
     testdir.makepyfile(
         f"""
         import pytest
@@ -291,7 +291,7 @@ def test_with_tb(testdir, assume):
             assert False
 
         def test_func():
-            {assume.format(
+            {assume_call.format(
                 expr="1==2",
                 msg=None
             )}
