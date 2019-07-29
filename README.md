@@ -63,3 +63,18 @@ def test_simple_assume(x, y):
     ----------------------------------------
     Failed Assumptions:2
     ================================ 3 failed in 0.02 seconds =================================
+
+`pytest.assume` can also be used as a context manager around plain assertions:
+
+```python
+import pytest
+    
+@pytest.mark.parametrize(('x', 'y'), [(1, 1), (1, 0), (0, 1)])
+def test_simple_assume(x, y):
+    with pytest.assume:
+        assert x == y
+    with pytest.assume:
+        assert True
+    with pytest.assume:
+        assert False
+``` 
