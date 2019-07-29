@@ -402,7 +402,47 @@ def test_assume_fail_hook(testdir):
     assert "Retval for fail assume = False" in result.stdout.str()
 
 
-#
+def test_doesnt_catch_generic_exceptions(testdir):
+    """Let exceptions not related to AssertionErrors to fail the test"""
+
+    testdir.makepyfile(
+        """
+        import pytest
+        
+        def test_generic_exception():
+            with pytest.assume:
+                raise ValueError()
+    """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 1)
+    assert "test_doesnt_catch_generic_exceptions.py:5: ValueError" in result.stdout.str()
+
+
+def test_catches_subclass_of_assertionerror(testdir):
+    """Catch for assumption AssertionErrors and subclasses"""
+
+    testdir.makepyfile(
+        """
+        import pytest
+        
+        class DummyAssertionError(AssertionError):
+            pass
+
+        def test_assertionerror_subclass():
+            with pytest.assume:
+                raise DummyAssertionError()
+    """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 1)
+    assert "test_catches_subclass_of_assertionerror.py:8: FailedAssumption" in result.stdout.str()
+
+
 # def test_flaky(testdir):
 #     testdir.makepyfile(
 #         """

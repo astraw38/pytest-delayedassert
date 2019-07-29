@@ -32,7 +32,7 @@ class Assumption(object):
         return self.entry
 
 
-class FailedAssumption(Exception):
+class FailedAssumption(AssertionError):
     pass
 
 
@@ -59,7 +59,15 @@ class AssumeContextManager(object):
         if exc_val:
             context += str(exc_val) + "\n"
 
-        if exc_type:
+        if exc_type is None:
+            # format entry
+            entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+            pytest._hook_assume_pass(lineno=line, entry=entry)
+
+            self._last_status = True
+            return True
+
+        elif issubclass(exc_type, AssertionError):
             # format entry
             entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
 
@@ -75,14 +83,11 @@ class AssumeContextManager(object):
             _FAILED_ASSUMPTIONS.append(Assumption(entry, exc_tb, pretty_locals))
 
             self._last_status = False
+            return True
+
         else:
-            # format entry
-            entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
-            pytest._hook_assume_pass(lineno=line, entry=entry)
-
-            self._last_status = True
-
-        return True
+            # Another type of exception, let it rise uncaught
+            return
 
     def __call__(self, expr, msg=""):
         __tracebackhide__ = True
