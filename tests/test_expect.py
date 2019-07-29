@@ -4,7 +4,14 @@ import pytest
 pytest_plugins = ("pytester",)
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
+@pytest.fixture(scope="module", params=[
+    "pytest.assume({expr}, {msg})",
+    "with pytest.assume: assert {expr}, {msg}"
+])
+def assume(request):
+    return request.param
+
+
 def test_passing_expect(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -22,7 +29,6 @@ def test_passing_expect(testdir, assume):
     assert "1 passed" in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_failing_expect(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -41,7 +47,6 @@ def test_failing_expect(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_multi_pass_one_failing_expect(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -72,7 +77,6 @@ def test_multi_pass_one_failing_expect(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_passing_expect_doesnt_cloak_assert(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -92,7 +96,6 @@ def test_passing_expect_doesnt_cloak_assert(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_failing_expect_doesnt_cloak_assert(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -113,7 +116,6 @@ def test_failing_expect_doesnt_cloak_assert(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -136,7 +138,6 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_msg_is_in_output(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -158,7 +159,6 @@ def test_msg_is_in_output(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_with_locals(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -182,7 +182,6 @@ def test_with_locals(testdir, assume):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_without_locals(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -205,7 +204,6 @@ def test_without_locals(testdir, assume):
     assert "b          = 2" not in stdout
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_xfail_assumption(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -225,7 +223,6 @@ def test_xfail_assumption(testdir, assume):
     assert "testfail" in stdout
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_xpass_assumption(testdir, assume):
     testdir.makepyfile(
         f"""
@@ -243,7 +240,6 @@ def test_xpass_assumption(testdir, assume):
     assert outcomes.get("xpassed", 0) == 1
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_bytecode(testdir, assume):
     testdir.makepyfile(
         b"""
@@ -258,7 +254,6 @@ def test_bytecode(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_unicode(testdir, assume):
     testdir.makepyfile(
         """
@@ -273,7 +268,6 @@ def test_unicode(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_mixed_stringtypes(testdir, assume):
     testdir.makepyfile(
         """
@@ -288,7 +282,6 @@ def test_mixed_stringtypes(testdir, assume):
     assert "1 failed" in result.stdout.str()
 
 
-@pytest.mark.parametrize("assume", ["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"])
 def test_with_tb(testdir, assume):
     testdir.makepyfile(
         f"""
