@@ -36,51 +36,59 @@ class FailedAssumption(Exception):
     pass
 
 
-def assume(expr, msg=""):
-    """
-    Checks the expression, if it's false, add it to the
-    list of failed assumptions. Also, add the locals at each failed
-    assumption, if showlocals is set.
+class AssumeContextManager(object):
+    def __enter__(self):
+        self._last_status = None
+        return self
 
-    :param expr: Expression to 'assert' on.
-    :param msg: Message to display if the assertion fails.
-    :return: None
-    """
-    __tracebackhide__ = True
-    pretty_locals = None
-    entry = None
-    tb = None
-    (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
-    # get filename, line, and context
-    filename = os.path.relpath(filename)
-    context = contextlist[0].lstrip() if not msg else msg
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        __tracebackhide__ = True
+        pretty_locals = None
+        entry = None
+        tb = None
+        (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
+        # get filename, line, and context
+        filename = os.path.relpath(filename)
+        context = contextlist[0].lstrip()
+        if exc_val:
+            context += str(exc_val) + "\n"
 
-    if not expr:
-        # format entry
-        entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
+        if exc_type:
+            # format entry
+            entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
 
-        # Debatable whether we should display locals for
-        # every failed assertion, or just the final one.
-        # I'm defaulting to per-assumption, just because vars
-        # can easily change between assumptions.
-        pretty_locals = [
-            "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
-        ]
+            # Debatable whether we should display locals for
+            # every failed assertion, or just the final one.
+            # I'm defaulting to per-assumption, just because vars
+            # can easily change between assumptions.
+            pretty_locals = [
+                "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
+            ]
 
-        try:
-            raise FailedAssumption(entry)
-        except FailedAssumption:
-            exc, _, tb = sys.exc_info()
+            pytest._hook_assume_fail(lineno=line, entry=entry)
+            _FAILED_ASSUMPTIONS.append(Assumption(entry, exc_tb, pretty_locals))
 
-        pytest._hook_assume_fail(lineno=line, entry=entry)
-        _FAILED_ASSUMPTIONS.append(Assumption(entry, tb, pretty_locals))
-        return False
-    else:
-        # format entry
-        entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+            self._last_status = False
+        else:
+            # format entry
+            entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+            pytest._hook_assume_pass(lineno=line, entry=entry)
 
-        pytest._hook_assume_pass(lineno=line, entry=entry)
+            self._last_status = True
+
         return True
+
+    def __call__(self, expr, msg=""):
+        with self:
+            if msg:
+                assert expr, msg
+            else:
+                assert expr
+
+        return self._last_status
+
+
+assume = AssumeContextManager()
 
 
 def pytest_addhooks(pluginmanager):
