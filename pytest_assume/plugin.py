@@ -41,10 +41,12 @@ class AssumeContextManager(object):
         self._enter_from_call = False
 
     def __enter__(self):
+        __tracebackhide__ = True
         self._last_status = None
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        __tracebackhide__ = True
         pretty_locals = None
         entry = None
         tb = None
@@ -83,6 +85,7 @@ class AssumeContextManager(object):
         return True
 
     def __call__(self, expr, msg=""):
+        __tracebackhide__ = True
         self._enter_from_call = True
         with self:
             if msg:
