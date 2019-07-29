@@ -16,6 +16,8 @@ Forked from Brian Okken's work with ['pytest-expect'](https://github.com/okken/p
   or   
   `pip install pytest-assume`  
 
+## Usage
+
 Sample Usage:
 ```python
 import pytest
@@ -68,13 +70,25 @@ def test_simple_assume(x, y):
 
 ```python
 import pytest
+from pytest import assume
+    
+@pytest.mark.parametrize(('x', 'y'), [(1, 1), (1, 0), (0, 1)])
+def test_simple_assume(x, y):
+    with assume: assert x == y
+    with assume: assert True
+    with assume: assert False
+``` 
+
+Notice that **there should be only one assertion per *with* block**. This, for instance, will not
+work as the second and third assertions will never be executed if the first one fails:
+
+```python
+import pytest
     
 @pytest.mark.parametrize(('x', 'y'), [(1, 1), (1, 0), (0, 1)])
 def test_simple_assume(x, y):
     with pytest.assume:
         assert x == y
-    with pytest.assume:
         assert True
-    with pytest.assume:
         assert False
 ``` 
