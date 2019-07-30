@@ -28,43 +28,75 @@ def test_simple_assume(x, y):
     pytest.assume(True)
     pytest.assume(False)
 ```        
-        
-    ======================================== FAILURES =========================================
-    _________________________________ test_simple_assume[1-1] _________________________________
-    >    pytest.assume(False)
-    test_assume.py:7
- 
-    y          = 1
-    x          = 1
-    ----------------------------------------
-    Failed Assumptions:1
-    _________________________________ test_simple_assume[1-0] _________________________________
-    >    pytest.assume(x == y)
-    test_assume.py:5
+Output:
+```        
+   ================================== FAILURES ===================================
+    ___________________________ test_simple_assume[1-1] ___________________________
+    
+    tp = <class 'pytest_assume.plugin.FailedAssumption'>, value = None, tb = None
+    
+        def reraise(tp, value, tb=None):
+            try:
+                if value is None:
+                    value = tp()
+                if value.__traceback__ is not tb:
+    >               raise value.with_traceback(tb)
+    E               pytest_assume.plugin.FailedAssumption: 
+    E               1 Failed Assumptions:
+    E               
+    E               test_simple_fail.py:7: AssumptionFailure
+    E               >>	pytest.assume(False)
+    E               AssertionError: assert False
+    
+    C:\Users\astraw\Projects\pytest-assume\venv\lib\site-packages\six.py:692: FailedAssumption
+    ___________________________ test_simple_assume[1-0] ___________________________
+    
+    tp = <class 'pytest_assume.plugin.FailedAssumption'>, value = None, tb = None
+    
+        def reraise(tp, value, tb=None):
+            try:
+                if value is None:
+                    value = tp()
+                if value.__traceback__ is not tb:
+    >               raise value.with_traceback(tb)
+    E               pytest_assume.plugin.FailedAssumption: 
+    E               2 Failed Assumptions:
+    E               
+    E               test_simple_fail.py:5: AssumptionFailure
+    E               >>	pytest.assume(x == y)
+    E               AssertionError: assert False
+    E               
+    E               test_simple_fail.py:7: AssumptionFailure
+    E               >>	pytest.assume(False)
+    E               AssertionError: assert False
+    
+    C:\Users\astraw\Projects\pytest-assume\venv\lib\site-packages\six.py:692: FailedAssumption
+    ___________________________ test_simple_assume[0-1] ___________________________
+    
+    tp = <class 'pytest_assume.plugin.FailedAssumption'>, value = None, tb = None
+    
+        def reraise(tp, value, tb=None):
+            try:
+                if value is None:
+                    value = tp()
+                if value.__traceback__ is not tb:
+    >               raise value.with_traceback(tb)
+    E               pytest_assume.plugin.FailedAssumption: 
+    E               2 Failed Assumptions:
+    E               
+    E               test_simple_fail.py:5: AssumptionFailure
+    E               >>	pytest.assume(x == y)
+    E               AssertionError: assert False
+    E               
+    E               test_simple_fail.py:7: AssumptionFailure
+    E               >>	pytest.assume(False)
+    E               AssertionError: assert False
+    
+    C:\Users\astraw\Projects\pytest-assume\venv\lib\site-packages\six.py:692: FailedAssumption
+    ========================== 3 failed in 0.25 seconds ===========================
+```
 
-    y          = 0
-    x          = 1
-    >    pytest.assume(False)
-    test_assume.py:7
-
-    y          = 0
-    x          = 1
-    ----------------------------------------
-    Failed Assumptions:2
-    _________________________________ test_simple_assume[0-1] _________________________________
-    >    pytest.assume(x == y)
-    test_assume.py:5
-
-    y          = 1
-    x          = 0
-    >    pytest.assume(False)
-    test_assume.py:7
-
-    y          = 1
-    x          = 0
-    ----------------------------------------
-    Failed Assumptions:2
-    ================================ 3 failed in 0.02 seconds =================================
+### Context manager
 
 `pytest.assume` can also be used as a context manager around plain assertions:
 
