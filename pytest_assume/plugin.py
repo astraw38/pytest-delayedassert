@@ -1,5 +1,4 @@
 import inspect
-import sys
 import os.path
 from six import reraise as raise_
 
@@ -32,55 +31,99 @@ class Assumption(object):
         return self.entry
 
 
-class FailedAssumption(Exception):
+class FailedAssumption(AssertionError):
     pass
 
 
-def assume(expr, msg=""):
-    """
+class AssumeContextManager(object):
+    """Context manager whose objects can be used for *soft-assertions*
+
+    This context manager can be accessed directly through `pytest.assume`.
+
     Checks the expression, if it's false, add it to the
     list of failed assumptions. Also, add the locals at each failed
     assumption, if showlocals is set.
 
+    When used as a context manager::
+
+        with pytest.assume:
+            assert expr, msg
+
+    When used directly, it also provides a return value::
+
+        ret = pytest.assume(expr, msg)
+
     :param expr: Expression to 'assert' on.
     :param msg: Message to display if the assertion fails.
-    :return: None
+    :return: True or False, acording to `expr`
     """
-    __tracebackhide__ = True
-    pretty_locals = None
-    entry = None
-    tb = None
-    (frame, filename, line, funcname, contextlist) = inspect.stack()[1][0:5]
-    # get filename, line, and context
-    filename = os.path.relpath(filename)
-    context = contextlist[0].lstrip() if not msg else msg
 
-    if not expr:
-        # format entry
-        entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
+    def __init__(self):
+        self._enter_from_call = False
 
-        # Debatable whether we should display locals for
-        # every failed assertion, or just the final one.
-        # I'm defaulting to per-assumption, just because vars
-        # can easily change between assumptions.
-        pretty_locals = [
-            "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
-        ]
+    def __enter__(self):
+        __tracebackhide__ = True
+        self._last_status = None
+        return self
 
-        try:
-            raise FailedAssumption(entry)
-        except FailedAssumption:
-            exc, _, tb = sys.exc_info()
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        __tracebackhide__ = True
+        pretty_locals = None
+        entry = None
+        tb = None
+        stack_level = 2 if self._enter_from_call else 1
+        (frame, filename, line, funcname, contextlist) = inspect.stack()[stack_level][0:5]
+        # get filename, line, and context
+        filename = os.path.relpath(filename)
 
-        pytest._hook_assume_fail(lineno=line, entry=entry)
-        _FAILED_ASSUMPTIONS.append(Assumption(entry, tb, pretty_locals))
-        return False
-    else:
-        # format entry
-        entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+        context = contextlist[0].lstrip()
 
-        pytest._hook_assume_pass(lineno=line, entry=entry)
-        return True
+        if exc_type is None:
+            # format entry
+            entry = u"{filename}:{line}: AssumptionSuccess\n>>\t{context}".format(**locals())
+            pytest._hook_assume_pass(lineno=line, entry=entry)
+
+            self._last_status = True
+            return True
+
+        elif issubclass(exc_type, AssertionError):
+            if exc_val:
+                context += "{}: {}\n\n".format(exc_type.__name__, exc_val)
+
+            # format entry
+            entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
+
+            # Debatable whether we should display locals for
+            # every failed assertion, or just the final one.
+            # I'm defaulting to per-assumption, just because vars
+            # can easily change between assumptions.
+            pretty_locals = [
+                "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
+            ]
+
+            pytest._hook_assume_fail(lineno=line, entry=entry)
+            _FAILED_ASSUMPTIONS.append(Assumption(entry, exc_tb, pretty_locals))
+
+            self._last_status = False
+            return True
+
+        else:
+            # Another type of exception, let it rise uncaught
+            return
+
+    def __call__(self, expr, msg=""):
+        __tracebackhide__ = True
+        self._enter_from_call = True
+        with self:
+            if msg:
+                assert expr, msg
+            else:
+                assert expr
+        self._enter_from_call = False
+        return self._last_status
+
+
+assume = AssumeContextManager()
 
 
 def pytest_addhooks(pluginmanager):
