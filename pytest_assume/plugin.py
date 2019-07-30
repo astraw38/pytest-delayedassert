@@ -77,8 +77,6 @@ class AssumeContextManager(object):
         filename = os.path.relpath(filename)
 
         context = contextlist[0].lstrip()
-        if exc_val:
-            context += str(exc_val) + "\n"
 
         if exc_type is None:
             # format entry
@@ -89,6 +87,9 @@ class AssumeContextManager(object):
             return True
 
         elif issubclass(exc_type, AssertionError):
+            if exc_val:
+                context += "{}: {}\n\n".format(exc_type.__name__, exc_val)
+
             # format entry
             entry = u"{filename}:{line}: AssumptionFailure\n>>\t{context}".format(**locals())
 
