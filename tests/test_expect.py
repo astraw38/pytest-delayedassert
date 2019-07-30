@@ -14,15 +14,17 @@ def assume_call(request):
 
 def test_passing_expect(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
 
         def test_func():
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr="1==1",
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(1, 0, 0)
@@ -31,14 +33,16 @@ def test_passing_expect(testdir, assume_call):
 
 def test_failing_expect(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr="1==2",
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -49,26 +53,31 @@ def test_failing_expect(testdir, assume_call):
 
 def test_multi_pass_one_failing_expect(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
-            {assume_call.format(
+            {}
+            {}
+            {}
+            {}
+        """.format(
+            assume_call.format(
                 expr='"xyz" in "abcdefghijklmnopqrstuvwxyz"',
                 msg=None
-            )}
-            {assume_call.format(
+            ),
+            assume_call.format(
                 expr="2==2",
                 msg=None,
-            )}
-            {assume_call.format(
+            ),
+            assume_call.format(
                 expr="1==2",
                 msg=None,
-            )}
-            {assume_call.format(
+            ),
+            assume_call.format(
                 expr='"xyz" in "abcd"',
                 msg=None,
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -79,15 +88,17 @@ def test_multi_pass_one_failing_expect(testdir, assume_call):
 
 def test_passing_expect_doesnt_cloak_assert(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
-            {assume_call.format(
+            {}
+            assert 1 == 2
+        """.format(
+            assume_call.format(
                 expr='1==1',
                 msg=None
-            )}
-            assert 1 == 2
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -98,15 +109,17 @@ def test_passing_expect_doesnt_cloak_assert(testdir, assume_call):
 
 def test_failing_expect_doesnt_cloak_assert(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
-            {assume_call.format(
+            {}
+            assert 1 == 2
+        """.format(
+            assume_call.format(
                 expr='1==2',
                 msg=None
-            )}
-            assert 1 == 2
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -118,17 +131,19 @@ def test_failing_expect_doesnt_cloak_assert(testdir, assume_call):
 
 def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume_call.format(
+            {}
+            assert a == b
+        """.format(
+            assume_call.format(
                 expr='a==b',
                 msg=None
-            )}
-            assert a == b
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -140,16 +155,18 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume_call):
 
 def test_msg_is_in_output(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr='a==b',
                 msg='"a:%s b:%s" % (a,b)'
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -161,16 +178,18 @@ def test_msg_is_in_output(testdir, assume_call):
 
 def test_with_locals(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr='a==b',
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess("--showlocals")
     result.assert_outcomes(0, 0, 1)
@@ -184,16 +203,18 @@ def test_with_locals(testdir, assume_call):
 
 def test_without_locals(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         def test_func():
             a = 1
             b = 2
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr='a==b',
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     stdout = result.stdout.str()
@@ -206,15 +227,17 @@ def test_without_locals(testdir, assume_call):
 
 def test_xfail_assumption(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr='1==2',
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess("-rxs")
     stdout = result.stdout.str()
@@ -225,15 +248,17 @@ def test_xfail_assumption(testdir, assume_call):
 
 def test_xpass_assumption(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         @pytest.mark.xfail(run=True, reason="testfail")
         def test_func():
-            {assume_call.format(
+            {}
+        """.format(
+            assume_call.format(
                 expr=True,
                 msg=None
-            )}
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     outcomes = result.parseoutcomes()
@@ -299,19 +324,21 @@ def test_mixed_stringtypes(testdir, assume_call):
 
 def test_with_tb(testdir, assume_call):
     testdir.makepyfile(
-        f"""
+        """
         import pytest
         
         def failing_func():
             assert False
 
         def test_func():
-            {assume_call.format(
+            {}
+            failing_func()
+        """.format(
+            assume_call.format(
                 expr="1==2",
                 msg=None
-            )}
-            failing_func()
-        """
+            )
+        )
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 1)
@@ -434,7 +461,7 @@ def test_catches_subclass_of_assertionerror(testdir):
         def test_assertionerror_subclass():
             with pytest.assume:
                 raise DummyAssertionError()
-    """
+        """
     )
 
     # run all tests with pytest
