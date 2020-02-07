@@ -179,7 +179,7 @@ def pytest_pyfunc_call(pyfuncitem):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_setup(item):
+def pytest_fixture_setup(fixturedef, request):
     """
     Need to make sure we process failed assumptions of setup failure as well, since pytest_pyfunc_call
     does not get called if there's a setup failure.  Otherwise, failed assumptions will carry over to the
@@ -191,7 +191,6 @@ def pytest_runtest_setup(item):
         outcome = yield
     finally:
         handle_assumptions(outcome)
-
 
 def handle_assumptions(outcome):
     failed_assumptions = _FAILED_ASSUMPTIONS
