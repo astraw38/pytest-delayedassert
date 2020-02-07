@@ -181,7 +181,7 @@ def pytest_pyfunc_call(pyfuncitem):
 @pytest.hookimpl(hookwrapper=True)
 def pytest_fixture_setup(fixturedef, request):
     """
-    Need to make sure we process failed assumptions of setup failure as well, since pytest_pyfunc_call
+    Need to make sure we process failed assumptions of setup failures as well, since pytest_pyfunc_call
     does not get called if there's a setup failure.  Otherwise, failed assumptions will carry over to the
     next test case and the next test case will appear to fail with the previous test's failed assumptions.
     """
@@ -211,7 +211,7 @@ def handle_assumptions(outcome, in_setup=False):
         # If it's just a failed assumption in setup, save the failed assumption and let the test run.
         if outcome and outcome.excinfo:
             # Failed assumption(s) and other error(s)
-            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assuption
+            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assumption
             root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
             raise_(
                 FailedAssumption,
