@@ -190,9 +190,10 @@ def pytest_fixture_setup(fixturedef, request):
     try:
         outcome = yield
     finally:
-        handle_assumptions(outcome)
+        handle_assumptions(outcome, in_setup=True)
 
-def handle_assumptions(outcome):
+def handle_assumptions(outcome, in_setup=False):
+    """Look for and process failed assumptions from setup or test execution."""
     failed_assumptions = _FAILED_ASSUMPTIONS
     if failed_assumptions:
         failed_count = len(failed_assumptions)
@@ -205,15 +206,20 @@ def handle_assumptions(outcome):
 
         last_tb = failed_assumptions[-1].tb
 
-        del _FAILED_ASSUMPTIONS[:]
+        # Only raise if we are not in setup or if we got other errors.
+        # If it's just a failed assumption in setup, save the failed assumption and let the test run.
         if outcome and outcome.excinfo:
+            # Failed assumption(s) and other error(s)
+            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assuption
             root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
             raise_(
                 FailedAssumption,
                 FailedAssumption(root_msg + "\n" + content),
                 outcome.excinfo[2],
             )
-        else:
+        elif not in_setup:
+            # Failed assumption(s) with no other errors, not in setup
+            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assumption
             exc = FailedAssumption(root_msg + "\n" + content)
             # Note: raising here so that we guarantee a failure.
             raise_(FailedAssumption, exc, last_tb)
