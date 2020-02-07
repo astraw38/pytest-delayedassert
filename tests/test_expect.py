@@ -52,6 +52,7 @@ def test_failing_expect(testdir, assume_call):
 
 
 def test_failing_expect_with_setup_error(testdir, assume_call):
+    """Setup has a failed assumption + error, test also has a failed assumption."""
     testdir.makepyfile(
         """
         import pytest
@@ -83,6 +84,7 @@ def test_failing_expect_with_setup_error(testdir, assume_call):
 
 
 def test_failing_expect_in_setup(testdir, assume_call):
+    """Setup has a failing assumption"""
     testdir.makepyfile(
         """
         import pytest
