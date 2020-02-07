@@ -162,7 +162,14 @@ def pytest_assume_pass(lineno, entry):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_setup(item):
+def pytest_pyfunc_call(pyfuncitem):
+    """
+    Using pyfunc_call to be as 'close' to the actual call of the test as possible.
+
+    This is executed immediately after the test itself is called.
+
+    Note: I'm not happy with exception handling in here.
+    """
     __tracebackhide__ = True
     outcome = None
     try:
@@ -172,13 +179,11 @@ def pytest_runtest_setup(item):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_pyfunc_call(pyfuncitem):
+def pytest_runtest_setup(item):
     """
-    Using pyfunc_call to be as 'close' to the actual call of the test as possible.
-
-    This is executed immediately after the test itself is called.
-
-    Note: I'm not happy with exception handling in here.
+    Need to make sure we process failed assumptions of setup failure as well, since pytest_pyfunc_call
+    does not get called if there's a setup failure.  Otherwise, failed assumptions will carry over to the
+    next test case and the next test case will appear to fail with the previous test's failed assumptions.
     """
     __tracebackhide__ = True
     outcome = None
