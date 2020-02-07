@@ -162,6 +162,16 @@ def pytest_assume_pass(lineno, entry):
 
 
 @pytest.hookimpl(hookwrapper=True)
+def pytest_runtest_setup(item):
+    __tracebackhide__ = True
+    outcome = None
+    try:
+        outcome = yield
+    finally:
+        handle_assumptions(outcome)
+
+
+@pytest.hookimpl(hookwrapper=True)
 def pytest_pyfunc_call(pyfuncitem):
     """
     Using pyfunc_call to be as 'close' to the actual call of the test as possible.
@@ -175,27 +185,33 @@ def pytest_pyfunc_call(pyfuncitem):
     try:
         outcome = yield
     finally:
-        failed_assumptions = _FAILED_ASSUMPTIONS
-        if failed_assumptions:
-            failed_count = len(failed_assumptions)
-            root_msg = "\n%s Failed Assumptions:\n" % failed_count
+        handle_assumptions(outcome)
 
-            if getattr(pytest, "_showlocals"):
-                content = "".join(x.longrepr() for x in failed_assumptions)
-            else:
-                content = "".join(x.repr() for x in failed_assumptions)
 
-            last_tb = failed_assumptions[-1].tb
+def handle_assumptions(outcome):
+    failed_assumptions = _FAILED_ASSUMPTIONS
+    if failed_assumptions:
+        failed_count = len(failed_assumptions)
+        root_msg = "\n%s Failed Assumptions:\n" % failed_count
 
-            del _FAILED_ASSUMPTIONS[:]
-            if outcome and outcome.excinfo:
-                root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
-                raise_(
-                    FailedAssumption,
-                    FailedAssumption(root_msg + "\n" + content),
-                    outcome.excinfo[2],
-                )
-            else:
-                exc = FailedAssumption(root_msg + "\n" + content)
-                # Note: raising here so that we guarantee a failure.
-                raise_(FailedAssumption, exc, last_tb)
+        if getattr(pytest, "_showlocals"):
+            content = "".join(x.longrepr() for x in failed_assumptions)
+        else:
+            content = "".join(x.repr() for x in failed_assumptions)
+
+        last_tb = failed_assumptions[-1].tb
+
+        del _FAILED_ASSUMPTIONS[:]
+        if outcome and outcome.excinfo:
+            root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
+            raise_(
+                FailedAssumption,
+                FailedAssumption(root_msg + "\n" + content),
+                outcome.excinfo[2],
+            )
+        else:
+            exc = FailedAssumption(root_msg + "\n" + content)
+            # Note: raising here so that we guarantee a failure.
+            raise_(FailedAssumption, exc, last_tb)
+
+
