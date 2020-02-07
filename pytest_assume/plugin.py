@@ -175,27 +175,54 @@ def pytest_pyfunc_call(pyfuncitem):
     try:
         outcome = yield
     finally:
-        failed_assumptions = _FAILED_ASSUMPTIONS
-        if failed_assumptions:
-            failed_count = len(failed_assumptions)
-            root_msg = "\n%s Failed Assumptions:\n" % failed_count
+        handle_assumptions(outcome)
 
-            if getattr(pytest, "_showlocals"):
-                content = "".join(x.longrepr() for x in failed_assumptions)
-            else:
-                content = "".join(x.repr() for x in failed_assumptions)
 
-            last_tb = failed_assumptions[-1].tb
+@pytest.hookimpl(hookwrapper=True)
+def pytest_fixture_setup(fixturedef, request):
+    """
+    Need to make sure we process failed assumptions of setup failures as well, since pytest_pyfunc_call
+    does not get called if there's a setup failure.  Otherwise, failed assumptions will carry over to the
+    next test case and the next test case will appear to fail with the previous test's failed assumptions.
+    """
+    __tracebackhide__ = True
+    outcome = None
+    try:
+        outcome = yield
+    finally:
+        handle_assumptions(outcome, in_setup=True)
 
-            del _FAILED_ASSUMPTIONS[:]
-            if outcome and outcome.excinfo:
-                root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
-                raise_(
-                    FailedAssumption,
-                    FailedAssumption(root_msg + "\n" + content),
-                    outcome.excinfo[2],
-                )
-            else:
-                exc = FailedAssumption(root_msg + "\n" + content)
-                # Note: raising here so that we guarantee a failure.
-                raise_(FailedAssumption, exc, last_tb)
+def handle_assumptions(outcome, in_setup=False):
+    """Look for and process failed assumptions from setup or test execution."""
+    __tracebackhide__ = True
+    failed_assumptions = _FAILED_ASSUMPTIONS
+    if failed_assumptions:
+        failed_count = len(failed_assumptions)
+        root_msg = "\n%s Failed Assumptions:\n" % failed_count
+
+        if getattr(pytest, "_showlocals"):
+            content = "".join(x.longrepr() for x in failed_assumptions)
+        else:
+            content = "".join(x.repr() for x in failed_assumptions)
+
+        last_tb = failed_assumptions[-1].tb
+
+        # Only raise if we are not in setup or if we got other errors.
+        # If it's just a failed assumption in setup, save the failed assumption and let the test run.
+        if outcome and outcome.excinfo:
+            # Failed assumption(s) and other error(s)
+            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assumption
+            root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
+            raise_(
+                FailedAssumption,
+                FailedAssumption(root_msg + "\n" + content),
+                outcome.excinfo[2],
+            )
+        elif not in_setup:
+            # Failed assumption(s) with no other errors, not in setup
+            del _FAILED_ASSUMPTIONS[:]  # Since we are raising, clear the failed assumption
+            exc = FailedAssumption(root_msg + "\n" + content)
+            # Note: raising here so that we guarantee a failure.
+            raise_(FailedAssumption, exc, last_tb)
+
+
