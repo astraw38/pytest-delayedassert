@@ -194,6 +194,7 @@ def pytest_fixture_setup(fixturedef, request):
 
 def handle_assumptions(outcome, in_setup=False):
     """Look for and process failed assumptions from setup or test execution."""
+    __traceback_hide__ = True
     failed_assumptions = _FAILED_ASSUMPTIONS
     if failed_assumptions:
         failed_count = len(failed_assumptions)
