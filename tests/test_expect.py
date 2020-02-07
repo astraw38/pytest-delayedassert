@@ -51,6 +51,67 @@ def test_failing_expect(testdir, assume_call):
     assert "pytest_pyfunc_call" not in result.stdout.str()
 
 
+def test_failing_expect_with_setup_error(testdir, assume_call):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture
+        def fixture_one():
+            {}
+            raise Exception("setup error")
+
+        def test_func1(fixture_one):
+            {}
+
+        def test_func2():
+            pass
+        """.format(assume_call.format(
+            expr="1==2",
+            msg=None
+        ),
+            assume_call.format(expr="1==2",
+                               msg=None)))
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(passed=1,
+                           skipped=0,
+                           failed=0,
+                           error=1)
+    assert "1 error" in result.stdout.str()
+    assert "1 Failed Assumptions" in result.stdout.str()
+    assert "1 passed" in result.stdout.str()
+    assert "ERROR at setup of test_func1" in result.stdout.str()
+
+
+def test_failing_expect_in_setup(testdir, assume_call):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture
+        def fixture_one():
+            {}
+
+        def test_func1(fixture_one):
+            pass
+
+        def test_func2():
+            pass
+        """.format(assume_call.format(
+            expr="1==2",
+            msg=None
+        ),
+            assume_call.format(expr="1==2",
+                               msg=None)))
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(passed=1,
+                           skipped=0,
+                           failed=0,
+                           error=1)
+    assert "1 error" in result.stdout.str()
+    assert "1 Failed Assumptions" in result.stdout.str()
+    assert "1 passed" in result.stdout.str()
+    assert "ERROR at setup of test_func1" in result.stdout.str()
+
+
 def test_multi_pass_one_failing_expect(testdir, assume_call):
     testdir.makepyfile(
         """
