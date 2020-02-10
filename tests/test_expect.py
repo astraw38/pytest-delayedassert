@@ -139,6 +139,33 @@ def test_multiple_failing_expect_in_setup(testdir, assume_call):
     assert result.stdout.str().count("1 Failed Assumption") == 2
 
 
+def test_multiple_failing_expect_in_module_scope_fixture(testdir, assume_call):
+    """Module-scope fixture has a failing assumption, and 2 tests use the failing fixture."""
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture(scope='module')
+        def fixture_one():
+            {}
+
+        def test_func1(fixture_one):
+            pass
+
+        def test_func2(fixture_one):
+            pass
+        """.format(assume_call.format(
+            expr="1==2",
+            msg=None
+        )))
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(passed=1,
+                           skipped=0,
+                           failed=1,
+                           error=0)
+    assert "1 failed" in result.stdout.str()
+    assert "1 Failed Assumption" in result.stdout.str()
+
+
 def test_multi_pass_one_failing_expect(testdir, assume_call):
     testdir.makepyfile(
         """
