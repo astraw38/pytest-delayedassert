@@ -192,6 +192,7 @@ def pytest_fixture_setup(fixturedef, request):
     finally:
         handle_assumptions(outcome, in_setup=True)
 
+
 def handle_assumptions(outcome, in_setup=False):
     """Look for and process failed assumptions from setup or test execution."""
     __tracebackhide__ = True
@@ -224,5 +225,3 @@ def handle_assumptions(outcome, in_setup=False):
             exc = FailedAssumption(root_msg + "\n" + content)
             # Note: raising here so that we guarantee a failure.
             raise_(FailedAssumption, exc, last_tb)
-
-
