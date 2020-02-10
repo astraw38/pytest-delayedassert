@@ -101,9 +101,7 @@ def test_failing_expect_in_setup(testdir, assume_call):
         """.format(assume_call.format(
             expr="1==2",
             msg=None
-        ),
-            assume_call.format(expr="1==2",
-                               msg=None)))
+        )))
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(passed=1,
                            skipped=0,
@@ -131,9 +129,7 @@ def test_multiple_failing_expect_in_setup(testdir, assume_call):
         """.format(assume_call.format(
             expr="1==2",
             msg=None
-        ),
-            assume_call.format(expr="1==2",
-                               msg=None)))
+        )))
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(passed=0,
                            skipped=0,
