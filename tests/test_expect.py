@@ -114,6 +114,35 @@ def test_failing_expect_in_setup(testdir, assume_call):
     assert "1 passed" in result.stdout.str()
 
 
+def test_multiple_failing_expect_in_setup(testdir, assume_call):
+    """Setup has a failing assumption, and 2 tests use the failing fixture."""
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.fixture
+        def fixture_one():
+            {}
+
+        def test_func1(fixture_one):
+            pass
+
+        def test_func2(fixture_one):
+            pass
+        """.format(assume_call.format(
+            expr="1==2",
+            msg=None
+        ),
+            assume_call.format(expr="1==2",
+                               msg=None)))
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(passed=0,
+                           skipped=0,
+                           failed=2,
+                           error=0)
+    assert "2 failed" in result.stdout.str()
+    assert result.stdout.str().count("1 Failed Assumption") == 2
+
+
 def test_multi_pass_one_failing_expect(testdir, assume_call):
     testdir.makepyfile(
         """
