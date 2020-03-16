@@ -76,7 +76,7 @@ class AssumeContextManager(object):
         # get filename, line, and context
         filename = os.path.relpath(filename)
 
-        context = contextlist[0].lstrip()
+        context = "" if contextlist is None else contextlist[0].lstrip()
 
         if exc_type is None:
             # format entry
