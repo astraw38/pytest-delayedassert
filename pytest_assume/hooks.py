@@ -14,3 +14,11 @@ def pytest_assume_pass(lineno, entry):
     entry: The assumption success message generated from assume() call
     """
     pass
+
+def pytest_assume_modify_summary_report(failed_assumptions):
+    """
+    Hook to manipulate the summary that prints at the end.
+    User can print the failure summary as per desired format.
+    failed_assumptions: List of all failed assume() calls
+    """
+    pass
