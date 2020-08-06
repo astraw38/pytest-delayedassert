@@ -149,7 +149,7 @@ def pytest_configure(config):
     # or if you are a plugin author use the pytest_configure(config) hook.
     pytest._hook_assume_fail = config.pluginmanager.hook.pytest_assume_fail
     pytest._hook_assume_pass = config.pluginmanager.hook.pytest_assume_pass
-    pytest._hook_assume_modify_summary_report = config.pluginmanager.hook.pytest_assume_modify_summary_report
+    pytest._hook_assume_summary_report = config.pluginmanager.hook.pytest_assume_summary_report
 
 
 @pytest.hookimpl(tryfirst=True)
@@ -162,8 +162,13 @@ def pytest_assume_pass(lineno, entry):
     pass
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_assume_modify_summary_report(failed_assumptions):
-    pass
+def pytest_assume_summary_report(failed_assumptions):
+    if getattr(pytest, "_showlocals"):
+        content = "".join(x.longrepr() for x in failed_assumptions)
+    else:
+        content = "".join(x.repr() for x in failed_assumptions)
+
+    return content
 
 
 @pytest.hookimpl(hookwrapper=True)
@@ -185,16 +190,18 @@ def pytest_pyfunc_call(pyfuncitem):
             failed_count = len(failed_assumptions)
             root_msg = "\n%s Failed Assumptions:\n" % failed_count
 
-            content = pytest._hook_assume_modify_summary_report(failed_assumptions=failed_assumptions)
-            if not content:
-                if getattr(pytest, "_showlocals"):
-                    content = "".join(x.longrepr() for x in failed_assumptions)
-                else:
-                    content = "".join(x.repr() for x in failed_assumptions)
-            else:
-                #Plugin returns will come as list elements.
-                content = "".join(x for x in content)
+            content = pytest._hook_assume_summary_report(failed_assumptions=failed_assumptions)
 
+            #Pluggy module returns list for multiple implementation of hooks
+            #The user, while implementing custom hook pytest_assume_summary_report, will return "string"
+            #Default hook is always present as list element 0
+            if len(content) == 1: #default length
+                #Uses default hook
+                content = content[0]
+            else:
+                #User created hook, if any
+                content = content[1]
+				
             last_tb = failed_assumptions[-1].tb
 
             del _FAILED_ASSUMPTIONS[:]
