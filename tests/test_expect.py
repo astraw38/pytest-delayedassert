@@ -497,3 +497,88 @@ def test_catches_subclass_of_assertionerror(testdir):
 #     result = testdir.runpytest_inprocess()
 #     result.assert_outcomes(0, 0, 1)
 #     assert '1 failed' in result.stdout.str()
+
+def test_summary_report_hook_with_new_hook(testdir):
+    """
+    Make sure that pytest_assume_summary_report works.
+    """
+
+    # create a temporary conftest.py file
+    testdir.makeconftest(
+        """
+        import pytest
+        
+        def pytest_assume_summary_report(failed_assumptions):
+        	print ("Inside summary_report hook")
+        
+        	required_list = []
+        	for x in failed_assumptions:
+        		if getattr(pytest, "_showlocals"):
+        			ele = x.longrepr()
+        		else:
+        			ele = x.repr()
+        			
+        		msg = "AssumptionFailure: " + ele.split('AssertionError:')[1].split('assert')[0].strip()
+        		if ", line = " not in msg:
+        			line_num = ele.split('AssumptionFailure')[0].split(':')[-2]
+        			required_list.append(msg + ', line = ' + line_num)
+        		else:
+        			required_list.append(msg)
+        			
+        	content = '\\n'.join(x for x in required_list)
+        	return content
+        """
+    )	
+
+    # create a temporary pytest test file
+    testdir.makepyfile(
+        """
+        import pytest
+        import logging
+        
+        logging.basicConfig(level=logging.DEBUG)
+        
+        def test_1():
+            pytest.assume(1==2, "1st failure")
+            pytest.assume(2==3, "2nd failure")
+            pytest.assume(3==4, "3rd failure")
+            pytest.assume(4==5, "4th failure")
+        """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 1)
+    assert "Inside summary_report hook" in result.stdout.str()
+    assert "AssumptionFailure: 1st failure, line = 7" in result.stdout.str()
+    assert "AssumptionFailure: 2nd failure, line = 8" in result.stdout.str()
+    assert "AssumptionFailure: 3rd failure, line = 9" in result.stdout.str()
+    assert "AssumptionFailure: 4th failure, line = 10" in result.stdout.str()	
+	
+def test_summary_report_hook_with_legacy_implementation(testdir):
+    """
+    Make sure that summary report gets printed in older format.
+    """
+    # create a temporary pytest test file
+    testdir.makepyfile(
+        """
+        import pytest
+        import logging
+        
+        logging.basicConfig(level=logging.DEBUG)
+        
+        def test_1():
+            pytest.assume(1==2, "1st failure")
+            pytest.assume(2==3, "2nd failure")
+            pytest.assume(3==4, "3rd failure")
+            pytest.assume(4==5, "4th failure")
+        """
+    )
+
+    # run all tests with pytest
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 1)
+    assert "AssertionError: 1st failure" in result.stdout.str()
+    assert "AssertionError: 2nd failure" in result.stdout.str()
+    assert "AssertionError: 3rd failure" in result.stdout.str()
+    assert "AssertionError: 4th failure" in result.stdout.str()		
