@@ -2,11 +2,13 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup
+with open("VERSION") as f:
+    VERSION = f.read().strip()
 
 setup(
     name='pytest-assume',
     packages=['pytest_assume'],
-    version='2.2.1',
+    version=VERSION,
     description='A pytest plugin that allows multiple failures per test',
     author='Brian Okken/Ashley Straw',
     author_email='as.fireflash38@gmail.com',
@@ -15,7 +17,7 @@ setup(
     license='MIT',
     keywords=['testing', 'pytest', 'assert'],
     install_requires=['pytest>=2.7'],
-    download_url='https://github.com/astraw38/pytest-assume/tarball/2.0.0',
+    download_url='https://github.com/astraw38/pytest-assume/tarball/{}'.format(VERSION),
     url='https://github.com/astraw38/pytest-assume',
     classifiers=[
         'Intended Audience :: Developers',
