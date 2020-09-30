@@ -8,14 +8,8 @@ python:
 dist: xenial
 sudo: true
 env:
-  - PYTEST=3.6.4
-  - PYTEST=3.7.4
-  - PYTEST=3.8.2
-  - PYTEST=3.9.3
-  - PYTEST=3.10.0
-  - PYTEST=4.0.*
-  - PYTEST=4.1.*
-  - PYTEST=4.2.*
+  - PYTEST=3.*
+  - PYTEST=4.*
   - PYTEST=5.*
   - PYTEST=6.*
 install:
