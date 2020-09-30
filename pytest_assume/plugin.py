@@ -74,7 +74,10 @@ class AssumeContextManager(object):
         stack_level = 2 if self._enter_from_call else 1
         (frame, filename, line, funcname, contextlist) = inspect.stack()[stack_level][0:5]
         # get filename, line, and context
-        filename = os.path.relpath(filename)
+        try:
+            filename = os.path.relpath(filename)
+        except ValueError:
+            pass	# filename is on a different mount than the current dir (Windows)
 
         context = "" if contextlist is None else contextlist[0].lstrip()
 
