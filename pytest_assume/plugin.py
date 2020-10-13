@@ -77,7 +77,7 @@ class AssumeContextManager(object):
         try:
             filename = os.path.relpath(filename)
         except ValueError:
-            pass	# filename is on a different mount than the current dir (Windows)
+            pass  # filename is on a different mount than the current dir (Windows)
 
         context = "" if contextlist is None else contextlist[0].lstrip()
 
@@ -164,6 +164,7 @@ def pytest_assume_fail(lineno, entry):
 def pytest_assume_pass(lineno, entry):
     pass
 
+
 @pytest.hookimpl(tryfirst=True)
 def pytest_assume_summary_report(failed_assumptions):
     if getattr(pytest, "_showlocals"):
@@ -175,7 +176,7 @@ def pytest_assume_summary_report(failed_assumptions):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_pyfunc_call(pyfuncitem):
+def pytest_runtest_call(item):
     """
     Using pyfunc_call to be as 'close' to the actual call of the test as possible.
 
@@ -195,16 +196,16 @@ def pytest_pyfunc_call(pyfuncitem):
 
             content = pytest._hook_assume_summary_report(failed_assumptions=failed_assumptions)
 
-            #Pluggy module returns list for multiple implementation of hooks
-            #The user, while implementing custom hook pytest_assume_summary_report, will return "string"
-            #Default hook is always present as list element 0
-            if len(content) == 1: #default length
-                #Uses default hook
+            # Pluggy module returns list for multiple implementation of hooks
+            # The user, while implementing custom hook pytest_assume_summary_report, will return "string"
+            # Default hook is always present as list element 0
+            if len(content) == 1:  # default length
+                # Uses default hook
                 content = content[0]
             else:
-                #User created hook, if any
+                # User created hook, if any
                 content = content[1]
-				
+
             last_tb = failed_assumptions[-1].tb
 
             del _FAILED_ASSUMPTIONS[:]
