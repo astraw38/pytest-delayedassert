@@ -15,6 +15,7 @@ def pytest_assume_pass(lineno, entry):
     """
     pass
 
+
 def pytest_assume_summary_report(failed_assumptions):
     """
     Hook to manipulate the summary that prints at the end.

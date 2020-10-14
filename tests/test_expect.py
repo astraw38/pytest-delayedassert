@@ -1,13 +1,12 @@
 import pytest
 
-
 pytest_plugins = ("pytester",)
 
 
-@pytest.fixture(scope="module", params=[
-    "pytest.assume({expr}, {msg})",
-    "with pytest.assume: assert {expr}, {msg}"
-])
+@pytest.fixture(
+    scope="module",
+    params=["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"],
+)
 def assume_call(request):
     return request.param
 
@@ -20,10 +19,7 @@ def test_passing_expect(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr="1==1",
-                msg=None
-            )
+            assume_call.format(expr="1==1", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -38,10 +34,7 @@ def test_failing_expect(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr="1==2",
-                msg=None
-            )
+            assume_call.format(expr="1==2", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -61,22 +54,10 @@ def test_multi_pass_one_failing_expect(testdir, assume_call):
             {}
             {}
         """.format(
-            assume_call.format(
-                expr='"xyz" in "abcdefghijklmnopqrstuvwxyz"',
-                msg=None
-            ),
-            assume_call.format(
-                expr="2==2",
-                msg=None,
-            ),
-            assume_call.format(
-                expr="1==2",
-                msg=None,
-            ),
-            assume_call.format(
-                expr='"xyz" in "abcd"',
-                msg=None,
-            )
+            assume_call.format(expr='"xyz" in "abcdefghijklmnopqrstuvwxyz"', msg=None),
+            assume_call.format(expr="2==2", msg=None),
+            assume_call.format(expr="1==2", msg=None),
+            assume_call.format(expr='"xyz" in "abcd"', msg=None),
         )
     )
     result = testdir.runpytest_inprocess()
@@ -94,10 +75,7 @@ def test_passing_expect_doesnt_cloak_assert(testdir, assume_call):
             {}
             assert 1 == 2
         """.format(
-            assume_call.format(
-                expr='1==1',
-                msg=None
-            )
+            assume_call.format(expr="1==1", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -115,10 +93,7 @@ def test_failing_expect_doesnt_cloak_assert(testdir, assume_call):
             {}
             assert 1 == 2
         """.format(
-            assume_call.format(
-                expr='1==2',
-                msg=None
-            )
+            assume_call.format(expr="1==2", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -139,10 +114,7 @@ def test_failing_expect_doesnt_cloak_assert_withrepr(testdir, assume_call):
             {}
             assert a == b
         """.format(
-            assume_call.format(
-                expr='a==b',
-                msg=None
-            )
+            assume_call.format(expr="a==b", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -162,10 +134,7 @@ def test_msg_is_in_output(testdir, assume_call):
             b = 2
             {}
         """.format(
-            assume_call.format(
-                expr='a==b',
-                msg='"a:%s b:%s" % (a,b)'
-            )
+            assume_call.format(expr="a==b", msg='"a:%s b:%s" % (a,b)')
         )
     )
     result = testdir.runpytest_inprocess()
@@ -185,10 +154,7 @@ def test_with_locals(testdir, assume_call):
             b = 2
             {}
         """.format(
-            assume_call.format(
-                expr='a==b',
-                msg=None
-            )
+            assume_call.format(expr="a==b", msg=None)
         )
     )
     result = testdir.runpytest_inprocess("--showlocals")
@@ -210,10 +176,7 @@ def test_without_locals(testdir, assume_call):
             b = 2
             {}
         """.format(
-            assume_call.format(
-                expr='a==b',
-                msg=None
-            )
+            assume_call.format(expr="a==b", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -233,10 +196,7 @@ def test_xfail_assumption(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr='1==2',
-                msg=None
-            )
+            assume_call.format(expr="1==2", msg=None)
         )
     )
     result = testdir.runpytest_inprocess("-rxs")
@@ -254,10 +214,7 @@ def test_xpass_assumption(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr=True,
-                msg=None
-            )
+            assume_call.format(expr=True, msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -273,10 +230,7 @@ def test_bytecode(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr='b"\x01" == b"\x5b"',
-                msg=None,
-            )
+            assume_call.format(expr='b"\x01" == b"\x5b"', msg=None)
         ).encode()
     )
     result = testdir.runpytest_inprocess()
@@ -292,10 +246,7 @@ def test_unicode(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr='u"\x5b" == u"\x5a"',
-                msg=None,
-            )
+            assume_call.format(expr='u"\x5b" == u"\x5a"', msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -311,10 +262,7 @@ def test_mixed_stringtypes(testdir, assume_call):
         def test_func():
             {}
         """.format(
-            assume_call.format(
-                expr='b"\x5b" == u"\x5a"',
-                msg=None,
-            )
+            assume_call.format(expr='b"\x5b" == u"\x5a"', msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -334,10 +282,7 @@ def test_with_tb(testdir, assume_call):
             {}
             failing_func()
         """.format(
-            assume_call.format(
-                expr="1==2",
-                msg=None
-            )
+            assume_call.format(expr="1==2", msg=None)
         )
     )
     result = testdir.runpytest_inprocess()
@@ -498,6 +443,7 @@ def test_catches_subclass_of_assertionerror(testdir):
 #     result.assert_outcomes(0, 0, 1)
 #     assert '1 failed' in result.stdout.str()
 
+
 def test_summary_report_hook_with_new_hook(testdir):
     """
     Make sure that pytest_assume_summary_report works.
@@ -509,26 +455,25 @@ def test_summary_report_hook_with_new_hook(testdir):
         import pytest
         
         def pytest_assume_summary_report(failed_assumptions):
-        	print ("Inside summary_report hook")
+            print ("Inside summary_report hook")
         
-        	required_list = []
-        	for x in failed_assumptions:
-        		if getattr(pytest, "_showlocals"):
-        			ele = x.longrepr()
-        		else:
-        			ele = x.repr()
-        			
-        		msg = "AssumptionFailure: " + ele.split('AssertionError:')[1].split('assert')[0].strip()
-        		if ", line = " not in msg:
-        			line_num = ele.split('AssumptionFailure')[0].split(':')[-2]
-        			required_list.append(msg + ', line = ' + line_num)
-        		else:
-        			required_list.append(msg)
-        			
-        	content = '\\n'.join(x for x in required_list)
-        	return content
+            required_list = []
+            for x in failed_assumptions:
+                if getattr(pytest, "_showlocals"):
+                    ele = x.longrepr()
+                else:
+                    ele = x.repr()
+
+                msg = "AssumptionFailure: " + ele.split('AssertionError:')[1].split('assert')[0].strip()
+                if ", line = " not in msg:
+                    line_num = ele.split('AssumptionFailure')[0].split(':')[-2]
+                    required_list.append(msg + ', line = ' + line_num)
+                else:
+                    required_list.append(msg)
+            content = '\\n'.join(x for x in required_list)
+            return content
         """
-    )	
+    )
 
     # create a temporary pytest test file
     testdir.makepyfile(
@@ -553,8 +498,9 @@ def test_summary_report_hook_with_new_hook(testdir):
     assert "AssumptionFailure: 1st failure, line = 7" in result.stdout.str()
     assert "AssumptionFailure: 2nd failure, line = 8" in result.stdout.str()
     assert "AssumptionFailure: 3rd failure, line = 9" in result.stdout.str()
-    assert "AssumptionFailure: 4th failure, line = 10" in result.stdout.str()	
-	
+    assert "AssumptionFailure: 4th failure, line = 10" in result.stdout.str()
+
+
 def test_summary_report_hook_with_legacy_implementation(testdir):
     """
     Make sure that summary report gets printed in older format.
@@ -581,4 +527,32 @@ def test_summary_report_hook_with_legacy_implementation(testdir):
     assert "AssertionError: 1st failure" in result.stdout.str()
     assert "AssertionError: 2nd failure" in result.stdout.str()
     assert "AssertionError: 3rd failure" in result.stdout.str()
-    assert "AssertionError: 4th failure" in result.stdout.str()		
+    assert "AssertionError: 4th failure" in result.stdout.str()
+
+
+def test_unittest_based_tests(testdir):
+    """
+    Unittest-based tests do not use the 'pytest_pyfunc_call' hook; so we can swallow exceptions if using
+    the context-based assumption.
+    """
+    testdir.makepyfile(
+        """
+        import pytest
+        
+        from unittest import TestCase
+        
+        def test_bar():
+            with pytest.assume:
+                assert 1==2
+        
+        class Foo(TestCase):
+            def test_foo(self):
+                with pytest.assume:
+                    assert 1==2
+        
+            def test_bar(self):
+                assert 1==2
+    """
+    )
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(0, 0, 3)
