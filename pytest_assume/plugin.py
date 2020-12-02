@@ -2,6 +2,10 @@ import inspect
 import os.path
 
 from _pytest.mark.evaluate import MarkEvaluator
+try:
+    from _pytest.skipping import evalxfail_key
+except ImportError:
+    evalxfail_key = ""
 from six import reraise as raise_
 
 import pytest
@@ -176,6 +180,13 @@ def pytest_assume_summary_report(failed_assumptions):
 
     return content
 
+def restore_xfail(item):
+    # Restore the xfail marker, as it's removed by the strict xfail checking, and will need to be
+    # there for later xfail/xpass checking to work.
+    if hasattr(item, "_store"):
+        item._store[evalxfail_key] = MarkEvaluator(item, "xfail")
+    else:
+        item._evalxfail = MarkEvaluator(item, "xfail")
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
@@ -215,9 +226,7 @@ def pytest_runtest_call(item):
                 # Xfailed test, but with strict=True. This is done via the pytest_pyfunc_call() hook, which
                 # is before our hook.
                 if "[XPASS(strict)]" in str(outcome.excinfo[1]):
-                    # Restore the xfail marker, as it's removed by the strict xfail checking, and will need to be
-                    # there for later xfail/xpass checking to work.
-                    item._evalxfail = MarkEvaluator(item, "xfail")
+                    restore_xfail(item)
                     raise_(FailedAssumption, FailedAssumption("%s\n%s" % (root_msg, content)), last_tb)
                 root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
                 raise_(
