@@ -1,5 +1,7 @@
 import inspect
 import os.path
+
+from _pytest.mark.evaluate import MarkEvaluator
 from six import reraise as raise_
 
 import pytest
@@ -210,6 +212,13 @@ def pytest_runtest_call(item):
 
             del _FAILED_ASSUMPTIONS[:]
             if outcome and outcome.excinfo:
+                # Xfailed test, but with strict=True. This is done via the pytest_pyfunc_call() hook, which
+                # is before our hook.
+                if "[XPASS(strict)]" in str(outcome.excinfo[1]):
+                    # Restore the xfail marker, as it's removed by the strict xfail checking, and will need to be
+                    # there for later xfail/xpass checking to work.
+                    item._evalxfail = MarkEvaluator(item, "xfail")
+                    raise_(FailedAssumption, FailedAssumption("%s\n%s" % (root_msg, content)), last_tb)
                 root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
                 raise_(
                     FailedAssumption,

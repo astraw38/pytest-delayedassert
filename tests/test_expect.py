@@ -4,7 +4,6 @@ pytest_plugins = ("pytester",)
 
 
 @pytest.fixture(
-    scope="module",
     params=["pytest.assume({expr}, {msg})", "with pytest.assume: assert {expr}, {msg}"],
 )
 def assume_call(request):
@@ -205,6 +204,23 @@ def test_xfail_assumption(testdir, assume_call):
     assert outcomes.get("xfailed", 0) == 1
     assert "testfail" in stdout
 
+def test_xfail_strict_assumption(testdir, assume_call):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.mark.xfail(run=True, reason="testfail", strict=True)
+        def test_func():
+            {}
+        """.format(
+            assume_call.format(expr="1==2", msg=None)
+        )
+    )
+    result = testdir.runpytest_inprocess("-rxs")
+    stdout = result.stdout.str()
+    outcomes = result.parseoutcomes()
+    assert outcomes.get("xfailed", 0) == 1
+    assert "testfail" in stdout
+
 
 def test_xpass_assumption(testdir, assume_call):
     testdir.makepyfile(
@@ -220,6 +236,24 @@ def test_xpass_assumption(testdir, assume_call):
     result = testdir.runpytest_inprocess()
     outcomes = result.parseoutcomes()
     assert outcomes.get("xpassed", 0) == 1
+
+
+def test_xpass_strict_assumption(testdir, assume_call):
+    testdir.makepyfile(
+        """
+        import pytest
+        @pytest.mark.xfail(run=True, reason="testfail", strict=True)
+        def test_func():
+            {}
+        """.format(
+            assume_call.format(expr="2==2", msg=None)
+        )
+    )
+    result = testdir.runpytest_inprocess("-rxs")
+    stdout = result.stdout.str()
+    outcomes = result.parseoutcomes()
+    assert outcomes.get("failed", 0) == 1
+    assert "[XPASS(strict)]" in stdout
 
 
 def test_bytecode(testdir, assume_call):
