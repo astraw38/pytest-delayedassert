@@ -1,11 +1,22 @@
 import inspect
 import os.path
+from functools import partial
 
-from _pytest.mark.evaluate import MarkEvaluator
 try:
-    from _pytest.skipping import evalxfail_key
+    # Pytest 6.x
+    from _pytest.skipping import xfailed_key as evalxfail_key
+    from _pytest.skipping import evaluate_xfail_marks as mark_eval
 except ImportError:
-    evalxfail_key = ""
+    # Pytest 5.x
+    from _pytest.mark.evaluate import MarkEvaluator
+    mark_eval = partial(MarkEvaluator, name="xfail")
+    try:
+        from _pytest.skipping import evalxfail_key
+    except ImportError:
+        # And pytest 3-4.x
+        evalxfail_key = ""
+
+
 from six import reraise as raise_
 
 import pytest
@@ -180,13 +191,14 @@ def pytest_assume_summary_report(failed_assumptions):
 
     return content
 
+
 def restore_xfail(item):
     # Restore the xfail marker, as it's removed by the strict xfail checking, and will need to be
     # there for later xfail/xpass checking to work.
     if hasattr(item, "_store"):
-        item._store[evalxfail_key] = MarkEvaluator(item, "xfail")
+        item._store[evalxfail_key] = mark_eval(item)
     else:
-        item._evalxfail = MarkEvaluator(item, "xfail")
+        item._evalxfail = mark_eval(item)
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_call(item):
