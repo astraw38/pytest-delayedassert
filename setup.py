@@ -17,7 +17,7 @@ setup(
     maintainer_email="as.fireflash38@gmail.com",
     license="MIT",
     keywords=["testing", "pytest", "assert"],
-    install_requires=["pytest>=2.7"],
+    install_requires=["pytest>=2.7", "six"],
     download_url="https://github.com/astraw38/pytest-assume/tarball/{}".format(VERSION),
     url="https://github.com/astraw38/pytest-assume",
     classifiers=[
