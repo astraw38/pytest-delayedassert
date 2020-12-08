@@ -1,5 +1,5 @@
 # pytest-assume
-[Build Status](https://github.com/astraw38/pytest-assume/workflows/Tox%20Unittest/badge.svg)
+![Build Status](https://github.com/astraw38/pytest-assume/workflows/Tox%20Unittest/badge.svg)
 
 A pytest plugin that allows multiple failures per test
 
