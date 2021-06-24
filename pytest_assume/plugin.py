@@ -200,7 +200,8 @@ def restore_xfail(item):
     else:
         item._evalxfail = mark_eval(item)
 
-@pytest.hookimpl(hookwrapper=True)
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_call(item):
     """
     Using pyfunc_call to be as 'close' to the actual call of the test as possible.

@@ -590,3 +590,27 @@ def test_unittest_based_tests(testdir):
     )
     result = testdir.runpytest_inprocess()
     result.assert_outcomes(0, 0, 3)
+
+
+def test_report_sections(testdir):
+    testdir.makepyfile(
+        """
+        import pytest
+        import logging
+        from pytest import assume
+        logging.getLogger().setLevel(logging.DEBUG)
+
+        @pytest.fixture
+        def setup_teardown():
+            logging.info("Setup")
+            yield
+            logging.info("Teardown")
+
+        def test_fail_assume(setup_teardown):
+            logging.info("This is a test log")
+            with assume: assert 1 == 2
+        """
+    )
+    result = testdir.runpytest_inprocess()
+    result.assert_outcomes(failed=1)
+    assert "Captured log call" in "\n".join(result.outlines)
