@@ -598,7 +598,8 @@ def test_report_sections(testdir):
         import pytest
         import logging
         from pytest import assume
-        
+        logging.getLogger().setLevel(logging.DEBUG)
+
         @pytest.fixture
         def setup_teardown():
             logging.info("Setup")
@@ -610,28 +611,6 @@ def test_report_sections(testdir):
             with assume: assert 1 == 2
         """
     )
-
-    testdir.makeconftest(
-        """
-        import pytest
-        
-        @pytest.hookimpl(hookwrapper=True)
-        def pytest_runtest_makereport(item, call):
-            report = (yield).get_result()
-            
-            if report.when == 'call':
-            
-                # There should be 2 sections - for 'setup' and 'call'
-                if not len(report.sections) == 2:
-                    raise Exception("Expected 2 report sections. Probably Call section is missing.")
-                    
-                section_setup, section_call = report.sections
-                call_title, call_text = section_call
-                
-                # Make sure the expected log text is there
-                if not ("call" in call_title and "This is a test log" in call_text):
-                    raise Exception("Could not find the expected 'call' log messages")
-        """
-    )
-    result = testdir.runpytest_inprocess("--log-cli-level=INFO")
+    result = testdir.runpytest_inprocess()
     result.assert_outcomes(failed=1)
+    assert "Captured log call" in "\n".join(result.outlines)
