@@ -201,78 +201,53 @@ def restore_xfail(item):
         item._evalxfail = mark_eval(item)
 
 
-@pytest.hookimpl(hookwrapper=True)
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
 def pytest_runtest_call(item):
     """
-    Using runtest_call to be compatible with unittest tests, as pyfunccall is not
-    called at all.
-    """
-    __tracebackhide__ = True
-    outcome = None
-    try:
-        outcome = yield
-    finally:
-        # Check if item was assumed already in pyfunccall wrapper
-        if getattr(item, "__assumed", None) is None:
-            assume_outcome(outcome, item)
-
-
-@pytest.hookimpl(hookwrapper=True)
-def pytest_pyfunc_call(pyfuncitem):
-    """
     Using pyfunc_call to be as 'close' to the actual call of the test as possible.
-    This improves compatibility with other plugins.
 
     This is executed immediately after the test itself is called.
-    """
-    __tracebackhide__ = True
-    outcome = None
-    try:
-        outcome = yield
-    finally:
-        pyfuncitem.__assumed = True
-        assume_outcome(outcome, pyfuncitem)
 
-
-def assume_outcome(outcome, item):
-    """
-    This is executed immediately after the test itself is called.
     Note: I'm not happy with exception handling in here.
     """
     __tracebackhide__ = True
-    failed_assumptions = _FAILED_ASSUMPTIONS
-    if failed_assumptions:
-        failed_count = len(failed_assumptions)
-        root_msg = "\n%s Failed Assumptions:\n" % failed_count
+    outcome = None
+    try:
+        outcome = yield
+    finally:
+        failed_assumptions = _FAILED_ASSUMPTIONS
+        if failed_assumptions:
+            failed_count = len(failed_assumptions)
+            root_msg = "\n%s Failed Assumptions:\n" % failed_count
 
-        content = pytest._hook_assume_summary_report(failed_assumptions=failed_assumptions)
+            content = pytest._hook_assume_summary_report(failed_assumptions=failed_assumptions)
 
-        # Pluggy module returns list for multiple implementation of hooks
-        # The user, while implementing custom hook pytest_assume_summary_report, will return "string"
-        # Default hook is always present as list element 0
-        if len(content) == 1:  # default length
-            # Uses default hook
-            content = content[0]
-        else:
-            # User created hook, if any
-            content = content[1]
+            # Pluggy module returns list for multiple implementation of hooks
+            # The user, while implementing custom hook pytest_assume_summary_report, will return "string"
+            # Default hook is always present as list element 0
+            if len(content) == 1:  # default length
+                # Uses default hook
+                content = content[0]
+            else:
+                # User created hook, if any
+                content = content[1]
 
-        last_tb = failed_assumptions[-1].tb
+            last_tb = failed_assumptions[-1].tb
 
-        del _FAILED_ASSUMPTIONS[:]
-        if outcome and outcome.excinfo:
-            # Xfailed test, but with strict=True. This is done via the pytest_pyfunc_call() hook, which
-            # is before our hook.
-            if "[XPASS(strict)]" in str(outcome.excinfo[1]):
-                restore_xfail(item)
-                raise_(FailedAssumption, FailedAssumption("%s\n%s" % (root_msg, content)), last_tb)
-            root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
-            raise_(
-                FailedAssumption,
-                FailedAssumption(root_msg + "\n" + content),
-                outcome.excinfo[2],
-            )
-        else:
-            exc = FailedAssumption(root_msg + "\n" + content)
-            # Note: raising here so that we guarantee a failure.
-            raise_(FailedAssumption, exc, last_tb)
+            del _FAILED_ASSUMPTIONS[:]
+            if outcome and outcome.excinfo:
+                # Xfailed test, but with strict=True. This is done via the pytest_pyfunc_call() hook, which
+                # is before our hook.
+                if "[XPASS(strict)]" in str(outcome.excinfo[1]):
+                    restore_xfail(item)
+                    raise_(FailedAssumption, FailedAssumption("%s\n%s" % (root_msg, content)), last_tb)
+                root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
+                raise_(
+                    FailedAssumption,
+                    FailedAssumption(root_msg + "\n" + content),
+                    outcome.excinfo[2],
+                )
+            else:
+                exc = FailedAssumption(root_msg + "\n" + content)
+                # Note: raising here so that we guarantee a failure.
+                raise_(FailedAssumption, exc, last_tb)
