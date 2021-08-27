@@ -121,7 +121,7 @@ class AssumeContextManager(object):
                 "\t%-10s = %s" % (name, saferepr(val)) for name, val in frame.f_locals.items()
             ]
 
-            pytest._hook_assume_fail(lineno=line, entry=entry)
+            pytest._hook_assume_fail(frame=frame, lineno=line, entry=entry)
             _FAILED_ASSUMPTIONS.append(Assumption(entry, exc_tb, pretty_locals))
 
             self._last_status = False
@@ -173,7 +173,7 @@ def pytest_configure(config):
 
 
 @pytest.hookimpl(tryfirst=True)
-def pytest_assume_fail(lineno, entry):
+def pytest_assume_fail(frame, lineno, entry):
     pass
 
 

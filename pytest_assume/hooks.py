@@ -1,6 +1,7 @@
-def pytest_assume_fail(lineno, entry):
+def pytest_assume_fail(frame, lineno, entry):
     """
     Hook to manipulate user-defined data in-case of assumption failure.
+    frame: function local variable.
     lineno: Line in the code from where asumption failed.
     entry: The assumption failure message generated from assume() call
     """
