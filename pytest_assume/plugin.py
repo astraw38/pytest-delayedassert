@@ -72,7 +72,7 @@ class AssumeContextManager(object):
 
     :param expr: Expression to 'assert' on.
     :param msg: Message to display if the assertion fails.
-    :return: True or False, acording to `expr`
+    :return: True or False, according to `expr`
     """
 
     def __init__(self):
