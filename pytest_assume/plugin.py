@@ -241,7 +241,9 @@ def pytest_runtest_call(item):
                 if "[XPASS(strict)]" in str(outcome.excinfo[1]):
                     restore_xfail(item)
                     raise_(FailedAssumption, FailedAssumption("%s\n%s" % (root_msg, content)), last_tb)
-                root_msg = "\nOriginal Failure:\n\n>> %s\n" % repr(outcome.excinfo[1]) + root_msg
+                # Note: code traceback should already be printed above, this is to stay consistent
+                original_failure = "%s: %s" % (outcome.excinfo[0].__name__, str(outcome.excinfo[1]))
+                root_msg = "\nOriginal Failure:\n\n%s\n" % original_failure + root_msg
                 raise_(
                     FailedAssumption,
                     FailedAssumption(root_msg + "\n" + content),
